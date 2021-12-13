@@ -1,0 +1,8 @@
+projects/chat-server/build
+projects/chat-server/target
+projects/chat-server/.gradle
+projects/chat-server/local.properties
+projects/chat-server/*.lock
+projcets/chat-server/app/snippets-api
+projects/chat-server/*.code-workspace
+projects/chat-server/.idea
