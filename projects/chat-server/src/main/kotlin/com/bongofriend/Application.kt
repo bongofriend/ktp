@@ -1,16 +1,17 @@
 package com.bongofriend
 
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
 import com.bongofriend.plugins.*
+import io.ktor.application.*
 
-fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
-        configureRouting()
-        configureSockets()
-        configureSerialization()
-        configureMonitoring()
-        configureHTTP()
-        //configureSecurity()
-    }.start(wait = true)
+fun main(args: Array<String>): Unit =
+    io.ktor.server.netty.EngineMain.main(args)
+
+fun Application.module() {
+    configureKoin()
+    configureRouting()
+    configureSockets()
+    configureSerialization()
+    configureMonitoring()
+    configureHTTP()
+    //configureSecurity()
 }
