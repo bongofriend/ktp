@@ -1,31 +1,52 @@
 package com.bongofriend
 
 import com.bongofriend.requests.AddNewUserRequest
+import com.bongofriend.requests.GetUserTokenRequest
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
-import io.ktor.server.testing.*
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class UserTest {
-    private val objectMapper = ObjectMapper()
+    private val objectMapper: ObjectMapper = ObjectMapper()
 
-    @BeforeTest
-    fun clearTestDatabase() {
-        prepareDatabase()
+    @BeforeAll
+    fun prepare() {
+        removeTestDb()
+    }
+
+    @AfterAll
+    fun cleanUp() {
+        removeTestDb()
     }
 
     @Test
-    fun testNewUserCreation() {
-        withChatServerEnvironment {
-            with(handleRequest(HttpMethod.Post, "/users"){
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                val request = AddNewUserRequest(TestUser.username, TestUser.password)
-                setBody(objectMapper.writeValueAsString(request))
-            }) {
-                assertEquals(HttpStatusCode.Created, response.status())
-            }
+    @Order(1)
+    fun `Create New User`() {
+        executePost("/users", AddNewUserRequest(TestUser.username, TestUser.password)) {
+            assertEquals(HttpStatusCode.Created, response.status())
+            assertFalse(response.content.isNullOrEmpty())
+            val data = objectMapper.readValue<Map<String, String>>(response.content!!)
+            assertTrue(data.containsKey("id"))
+            val userId = data["id"]
+            assertFalse(userId.isNullOrEmpty())
+            assertTrue(isValidUuid(userId!!))
+        }
+    }
+
+    @Test
+    @Order(2)
+    fun `Request Authentication Token for Test User`() {
+        executePost("/users/token", GetUserTokenRequest(TestUser.username, TestUser.password)) {
+            assertEquals(HttpStatusCode.OK, response.status())
+            assertFalse(response.content.isNullOrEmpty())
+            val data = objectMapper.readValue<Map<String, String>>(response.content!!)
+            assertTrue(data.containsKey("token"))
+            val token = data["token"]
+            assertFalse(token.isNullOrEmpty())
         }
     }
 }

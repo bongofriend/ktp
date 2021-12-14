@@ -1,10 +1,8 @@
 package com.bongofriend.plugins
 
+import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
 
 fun Application.configureHTTP() {
     install(DefaultHeaders) {
@@ -16,7 +14,6 @@ fun Application.configureHTTP() {
         method(HttpMethod.Delete)
         method(HttpMethod.Patch)
         header(HttpHeaders.Authorization)
-        header("MyCustomHeader")
         allowCredentials = true
     }
 
