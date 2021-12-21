@@ -10,12 +10,12 @@ class UserEntity(id: EntityID<UUID>): UUIDEntity(id) {
 
     var username by Users.username
     var passwordHash by Users.passwordHash
-    var createdAt by Users.createdAt
+    var groups by ChatGroupEntity via UsersInGroups
 }
 
 class ChatGroupEntity(id: EntityID<UUID>): UUIDEntity(id) {
     companion object: UUIDEntityClass<ChatGroupEntity>(ChatGroups)
 
     var name by ChatGroups.name
-    val members by UserEntity via UsersInGroups
+    var members by UserEntity via UsersInGroups
 }
