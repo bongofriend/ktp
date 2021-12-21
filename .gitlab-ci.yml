@@ -1,0 +1,14 @@
+image: maven:3.3.9-jdk-8
+
+cache:
+  paths:
+    - .m2/repository
+
+stages:
+  - test
+
+test:
+  stage: test
+  script:
+    - "cd projects/chat-server"
+    - "mvn clean verify"
