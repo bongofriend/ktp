@@ -13,3 +13,12 @@ object Users: BaseTable() {
     val username = varchar("user_name", 255).uniqueIndex()
     val passwordHash = varchar("password_hash", 255)
 }
+
+object ChatGroups: BaseTable() {
+    val name = varchar("chat_group_name", 255).uniqueIndex()
+}
+
+object UsersInGroups: BaseTable() {
+    val user = reference("user", Users)
+    val group = reference("chat_group", ChatGroups)
+}

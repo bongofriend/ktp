@@ -8,10 +8,10 @@ fun main(args: Array<String>): Unit =
 
 fun Application.module() {
     configureKoin()
+    configureSecurity()
     configureRouting()
     configureSockets()
     configureSerialization()
     configureMonitoring()
     configureHTTP()
-    //configureSecurity()
 }

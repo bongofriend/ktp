@@ -1,44 +1,17 @@
 package com.bongofriend.plugins
 
-import com.bongofriend.requests.AddNewUserRequest
-import com.bongofriend.requests.GetUserTokenRequest
-import com.bongofriend.services.UserService
-import io.ktor.routing.*
-import io.ktor.http.*
+import com.bongofriend.routes.chatGroupRoute
+import com.bongofriend.routes.userRoute
 import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
-import org.koin.ktor.ext.inject
+import io.ktor.auth.*
+import io.ktor.routing.*
 
 fun Application.configureRouting() {
 
     routing {
-       userRoute()
-    }
-}
-
-internal fun Route.userRoute() {
-    val userService by inject<UserService>()
-
-    route("/users") {
-        post {
-            val userData = call.receive<AddNewUserRequest>()
-            val result = userService.addNewUser(userData)
-            return@post if (result == null) {
-                call.respond(HttpStatusCode.BadRequest)
-            } else {
-                call.respond(HttpStatusCode.Created, mapOf("id" to result.toString()))
-            }
-        }
-
-        post("/token") {
-            val data = call.receive<GetUserTokenRequest>()
-            val token = userService.createUserToken(data)
-            return@post if (token == null) {
-                call.respond(HttpStatusCode.BadRequest)
-            } else {
-                call.respond(HttpStatusCode.OK, mapOf("token" to token))
-            }
+        userRoute()
+        authenticate("auth-jwt") {
+            chatGroupRoute()
         }
     }
 }

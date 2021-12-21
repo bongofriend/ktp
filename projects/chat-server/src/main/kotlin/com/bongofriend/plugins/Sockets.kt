@@ -1,12 +1,10 @@
 package com.bongofriend.plugins
 
-import io.ktor.http.cio.websocket.*
-import io.ktor.websocket.*
-import java.time.*
 import io.ktor.application.*
-import io.ktor.response.*
-import io.ktor.request.*
+import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
+import io.ktor.websocket.*
+import java.time.Duration
 
 fun Application.configureSockets() {
     install(WebSockets) {
@@ -17,7 +15,8 @@ fun Application.configureSockets() {
     }
 
     routing {
-        webSocket("/") { // websocketSession
+        webSocket("/") {
+            // websocketSession
             for (frame in incoming) {
                 when (frame) {
                     is Frame.Text -> {

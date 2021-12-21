@@ -11,7 +11,7 @@ import java.util.*
 interface UserRepository {
     suspend fun addNewUser(username: String, password: String): User
     suspend fun getUserByName(username: String): User?
-    suspend fun getUserByID(userId: UUID): User?
+    suspend fun getUserById(userId: UUID): User?
 }
 
 class UserRepositoryImpl: UserRepository {
@@ -27,7 +27,7 @@ class UserRepositoryImpl: UserRepository {
 
     override suspend fun getUserByName(username: String): User? = getUserByExpression(Users.username eq username)
 
-    override suspend fun getUserByID(userId: UUID): User? = getUserByExpression(Users.id eq userId)
+    override suspend fun getUserById(userId: UUID): User? = getUserByExpression(Users.id eq userId)
 
     private fun getUserByExpression(op: Op<Boolean>): User? {
         val userEntity = transaction {

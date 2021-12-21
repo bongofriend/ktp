@@ -34,6 +34,7 @@ class UserServiceImpl(private val userRepo: UserRepository, jwtConfig: Applicati
     private val jwtIssuer = jwtConfig.property("issuer").getString()
 
     override suspend fun addNewUser(request: AddNewUserRequest): UUID? {
+       logger.info("Inserting new user")
        if (request.password.isEmpty() || request.username.isEmpty()) {
            return null
        }
