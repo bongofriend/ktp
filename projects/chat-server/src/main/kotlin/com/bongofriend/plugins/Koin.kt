@@ -7,10 +7,7 @@ import com.bongofriend.data.repositories.ChatGroupRepository
 import com.bongofriend.data.repositories.ChatGroupRepositoryImpl
 import com.bongofriend.data.repositories.UserRepository
 import com.bongofriend.data.repositories.UserRepositoryImpl
-import com.bongofriend.services.ChatGroupService
-import com.bongofriend.services.ChatGroupServiceImpl
-import com.bongofriend.services.UserService
-import com.bongofriend.services.UserServiceImpl
+import com.bongofriend.services.*
 import io.ktor.application.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -29,7 +26,8 @@ fun Application.configureKoin() {
 }
 
 internal fun serviceModule(env: ApplicationEnvironment) = module {
-    single<UserService>{ UserServiceImpl(get<UserRepository>(), env.config.config("jwt")) }
+    single<LoginService> { LoginServiceImpl(env.config.config("jwt"), get<UserRepository>()) }
+    single<UserService>{ UserServiceImpl(get<UserRepository>(), get<LoginService>()) }
     single<ChatGroupService> { ChatGroupServiceImpl(get<ChatGroupRepository>()) }
 }
 

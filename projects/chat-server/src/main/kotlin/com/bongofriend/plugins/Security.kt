@@ -1,15 +1,15 @@
 package com.bongofriend.plugins
 
-import io.ktor.auth.*
-import io.ktor.auth.jwt.*
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.bongofriend.data.repositories.UserRepository
+import com.bongofriend.services.LoginService
 import io.ktor.application.*
+import io.ktor.auth.*
+import io.ktor.auth.jwt.*
 import org.koin.ktor.ext.inject
-import java.util.*
 
 fun Application.configureSecurity() {
+    val loginService by inject<LoginService>()
 
     authentication {
         jwt("auth-jwt") {
@@ -27,11 +27,7 @@ fun Application.configureSecurity() {
                     .withIssuer(jwtIssuer)
                     .build()
             )
-            validate { credential ->
-                val userRepository by inject<UserRepository>()
-                val userId = credential.getClaim("id", String::class) ?: return@validate null
-                return@validate userRepository.getUserById(UUID.fromString(userId))
-            }
+            validate { credential -> loginService.verifyUser(credential) }
         }
     }
 }
