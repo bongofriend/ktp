@@ -13,6 +13,8 @@ import java.util.*
 import kotlin.io.path.Path
 import kotlin.io.path.deleteIfExists
 
+//TODO: Clean test HTTP calls from test logic
+
 internal object PrimaryTestUser {
     const val username = "hans_peter"
     const val password = "password"

@@ -19,3 +19,11 @@ class ChatGroupEntity(id: EntityID<UUID>): UUIDEntity(id) {
     var name by ChatGroups.name
     var members by UserEntity via UsersInGroups
 }
+
+class ChatMessageEntity(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object: UUIDEntityClass<ChatMessageEntity>(ChatMessages)
+
+    var message by ChatMessages.message
+    var user by UserEntity referencedOn Users.id
+    var group by ChatGroupEntity referencedOn ChatGroups.id
+}

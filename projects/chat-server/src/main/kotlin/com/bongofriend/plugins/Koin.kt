@@ -1,12 +1,10 @@
 package com.bongofriend.plugins
 
 import com.bongofriend.data.db.ChatGroups
+import com.bongofriend.data.db.ChatMessages
 import com.bongofriend.data.db.Users
 import com.bongofriend.data.db.UsersInGroups
-import com.bongofriend.data.repositories.ChatGroupRepository
-import com.bongofriend.data.repositories.ChatGroupRepositoryImpl
-import com.bongofriend.data.repositories.UserRepository
-import com.bongofriend.data.repositories.UserRepositoryImpl
+import com.bongofriend.data.repositories.*
 import com.bongofriend.services.*
 import io.ktor.application.*
 import org.jetbrains.exposed.sql.Database
@@ -26,9 +24,9 @@ fun Application.configureKoin() {
 }
 
 internal fun serviceModule(env: ApplicationEnvironment) = module {
-    single<LoginService> { LoginServiceImpl(env.config.config("jwt"), get<UserRepository>()) }
+    single<LoginService> { LoginServiceImpl(env.config.config("jwt"), get<UserRepository>(), get<ChatGroupRepository>()) }
     single<UserService>{ UserServiceImpl(get<UserRepository>(), get<LoginService>()) }
-    single<ChatGroupService> { ChatGroupServiceImpl(get<ChatGroupRepository>()) }
+    single<ChatGroupService> { ChatGroupServiceImpl(get<ChatGroupRepository>(), get<ChatMessageRepository>(), get<LoginService>()) }
 }
 
 internal fun repoModule(env: ApplicationEnvironment): Module {
@@ -40,12 +38,14 @@ internal fun repoModule(env: ApplicationEnvironment): Module {
         SchemaUtils.create(
             Users,
             ChatGroups,
-            UsersInGroups
+            UsersInGroups,
+            ChatMessages
         )
     }
 
     return module {
         single<UserRepository> { UserRepositoryImpl() }
         single<ChatGroupRepository> { ChatGroupRepositoryImpl() }
+        single<ChatMessageRepository> { ChatMessageRepositoryImpl() }
     }
 }

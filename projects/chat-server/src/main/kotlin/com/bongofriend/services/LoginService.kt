@@ -5,6 +5,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.Payload
 import com.bongofriend.data.models.User
+import com.bongofriend.data.repositories.ChatGroupRepository
 import com.bongofriend.data.repositories.UserRepository
 import com.bongofriend.requests.GetUserTokenRequest
 import io.ktor.auth.jwt.*
@@ -19,9 +20,10 @@ interface LoginService {
     fun hashPassword(password: String): String
     suspend fun verifyUser(token: String): User?
     suspend fun verifyUser(credential: JWTCredential): User?
+    suspend fun isUserInGroup(user: User, groupId: String): Boolean
 }
 
-class LoginServiceImpl(jwtConfig: ApplicationConfig, private val userRepo: UserRepository): LoginService, BaseService(
+class LoginServiceImpl(jwtConfig: ApplicationConfig, private val userRepo: UserRepository, private val groupRepo: ChatGroupRepository): LoginService, BaseService(
     Logger.getLogger(LoginService::class.simpleName)) {
 
     companion object {
@@ -44,7 +46,7 @@ class LoginServiceImpl(jwtConfig: ApplicationConfig, private val userRepo: UserR
     }
 
     override suspend fun generateToken(request: GetUserTokenRequest): String? {
-        val user = withContext(Dispatchers.IO) { userRepo.getUserByName(request.username) } ?: return null
+        val user = userRepo.getUserByName(request.username) ?: return null
         if (!verifyPassword(request.password, user.passwordHash)) return null
         return JWT
             .create()
@@ -70,6 +72,12 @@ class LoginServiceImpl(jwtConfig: ApplicationConfig, private val userRepo: UserR
         return withContext(Dispatchers.IO) {
             return@withContext userRepo.getUserById(id)
         }
+    }
+
+    override suspend fun isUserInGroup(user: User, groupId: String): Boolean {
+        if (groupId.isEmpty()) return false
+        val id = UUID.fromString(groupId)
+        return groupRepo.isUserInGroup(user, id)
     }
 
 }

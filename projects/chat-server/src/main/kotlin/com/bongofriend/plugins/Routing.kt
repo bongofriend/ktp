@@ -1,6 +1,7 @@
 package com.bongofriend.plugins
 
 import com.bongofriend.routes.chatGroupRoute
+import com.bongofriend.routes.messages
 import com.bongofriend.routes.userRoute
 import io.ktor.application.*
 import io.ktor.auth.*
@@ -12,6 +13,7 @@ fun Application.configureRouting() {
         userRoute()
         authenticate("auth-jwt") {
             chatGroupRoute()
+            messages()
         }
     }
 }

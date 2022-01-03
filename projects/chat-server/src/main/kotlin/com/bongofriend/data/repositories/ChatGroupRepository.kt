@@ -14,9 +14,10 @@ import java.util.*
 
 interface ChatGroupRepository {
     suspend fun createNewChatGroup(name: String): ChatGroup
-    suspend fun addUserToChatGroup(user: User, group: ChatGroup)
+    suspend fun addUserToChatGroup(user: User, group: ChatGroup): Boolean
     suspend fun getChatGroupById(id: UUID): ChatGroup?
     suspend fun getChatGroupsForUser(user: User): List<ChatGroup>
+    suspend fun isUserInGroup(user: User, groupId: UUID): Boolean
 }
 
 class ChatGroupRepositoryImpl: ChatGroupRepository {
@@ -32,14 +33,13 @@ class ChatGroupRepositoryImpl: ChatGroupRepository {
         return ChatGroup(entity.id.value, entity.name)
     }
 
-    override suspend fun addUserToChatGroup(user: User, group: ChatGroup) {
-        withContext(Dispatchers.IO) {
-            transaction {
-                val userEntity = UserEntity.find { Users.id eq user.id }.first()
-                val groupEntity = ChatGroupEntity.find { ChatGroups.id eq group.id }.first()
+    override suspend fun addUserToChatGroup(user: User, group: ChatGroup): Boolean = withContext(Dispatchers.IO) {
+            return@withContext transaction {
+                val userEntity = UserEntity.find { Users.id eq user.id }.firstOrNull() ?: return@transaction false
+                val groupEntity = ChatGroupEntity.find { ChatGroups.id eq group.id }.firstOrNull() ?: return@transaction false
                 groupEntity.members = SizedCollection(groupEntity.members + userEntity)
+                return@transaction true
             }
-        }
     }
 
     override suspend fun getChatGroupById(id: UUID): ChatGroup? = withContext(Dispatchers.IO) {
@@ -47,7 +47,6 @@ class ChatGroupRepositoryImpl: ChatGroupRepository {
             ChatGroupEntity.find { ChatGroups.id eq id }.firstOrNull()
         } ?: return@withContext null
         return@withContext ChatGroup(entity.id.value, entity.name)
-
     }
 
     override suspend fun getChatGroupsForUser(user: User): List<ChatGroup> = withContext(Dispatchers.IO) {
@@ -57,5 +56,11 @@ class ChatGroupRepositoryImpl: ChatGroupRepository {
         }
     }
 
+    override suspend fun isUserInGroup(user: User, groupId: UUID): Boolean = withContext(Dispatchers.IO) {
+        return@withContext transaction {
+            val group = ChatGroupEntity.find { ChatGroups.id eq groupId }.firstOrNull() ?: return@transaction false
+            return@transaction group.members.any { u -> u.id.value == user.id}
+        }
+    }
 
 }

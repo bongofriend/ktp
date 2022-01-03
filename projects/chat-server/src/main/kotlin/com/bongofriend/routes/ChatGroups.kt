@@ -30,8 +30,8 @@ internal fun Route.chatGroupRoute() {
         post("/add") {
             val user = call.principal<User>() ?:return@post call.respond(HttpStatusCode.Forbidden)
             val request = call.receive<AddToChatGroupRequest>()
-            chatGroupService.addUserToChatGroup(user, request)
-            return@post call.respond(HttpStatusCode.OK)
+            val result = chatGroupService.addUserToChatGroup(user, request)
+            return@post if (result) call.respond(HttpStatusCode.OK) else call.respond(HttpStatusCode.BadRequest)
         }
 
         get {

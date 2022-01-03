@@ -18,3 +18,9 @@ object UsersInGroups: BaseTable() {
     val user = reference("user", Users)
     val group = reference("chat_group", ChatGroups)
 }
+
+object ChatMessages: BaseTable() {
+    val message = varchar("message", 255)
+    val user = reference("user", Users)
+    val group = reference("chat_group", ChatGroups)
+}
