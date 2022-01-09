@@ -25,8 +25,9 @@ fun Application.configureKoin() {
 
 internal fun serviceModule(env: ApplicationEnvironment) = module {
     single<LoginService> { LoginServiceImpl(env.config.config("jwt"), get<UserRepository>(), get<ChatGroupRepository>()) }
+    single<ClientConnectionManager> { ClientConnectionManagerImpl() }
     single<UserService>{ UserServiceImpl(get<UserRepository>(), get<LoginService>()) }
-    single<ChatGroupService> { ChatGroupServiceImpl(get<ChatGroupRepository>(), get<ChatMessageRepository>(), get<LoginService>()) }
+    single<ChatGroupService> { ChatGroupServiceImpl(get<ChatGroupRepository>(), get<ChatMessageRepository>(), get<LoginService>(), get<ClientConnectionManager>()) }
 }
 
 internal fun repoModule(env: ApplicationEnvironment): Module {

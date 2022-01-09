@@ -1,7 +1,9 @@
 package com.bongofriend
 
 import com.bongofriend.data.models.ChatGroup
+import com.bongofriend.requests.AddMessageToGroupRequest
 import com.bongofriend.requests.AddNewUserRequest
+import com.bongofriend.requests.CreateChatGroupRequest
 import com.bongofriend.requests.GetUserTokenRequest
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -67,6 +69,10 @@ private fun TestApplicationEngine.getTokenForTestUser(username: String, password
 internal fun TestApplicationEngine.getPrimaryUserToken(): String = getTokenForTestUser(PrimaryTestUser.username, PrimaryTestUser.password)
 
 internal fun TestApplicationEngine.getSecondaryUserToken(): String = getTokenForTestUser(SecondaryTestUser.username, SecondaryTestUser.password)
+
+internal fun TestApplicationEngine.createChatGroup(name: String, token: String) = executePost<CreateChatGroupRequest, Nothing>("/chatgroups/create", CreateChatGroupRequest(name), token)
+
+internal fun TestApplicationEngine.sendMessage(message: String, chatGroupId: String, token: String) = executePost<AddMessageToGroupRequest, Nothing>("/messages/${chatGroupId}", AddMessageToGroupRequest(message), token)
 
 internal fun TestApplicationEngine.getChatGroups(token: String): List<ChatGroup> {
     val data = executeGet("/chatgroups", token) {

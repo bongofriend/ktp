@@ -1,33 +1,41 @@
 package com.bongofriend.plugins
 
+import com.bongofriend.services.ClientConnectionManager
+import com.bongofriend.services.LoginService
 import io.ktor.application.*
-import io.ktor.http.cio.websocket.*
+import io.ktor.http.*
+import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import java.time.Duration
+import org.koin.ktor.ext.inject
 
 fun Application.configureSockets() {
     install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(15)
-        timeout = Duration.ofSeconds(15)
         maxFrameSize = Long.MAX_VALUE
         masking = false
     }
 
+
     routing {
-        webSocket("/") {
-            // websocketSession
-            for (frame in incoming) {
-                when (frame) {
-                    is Frame.Text -> {
-                        val text = frame.readText()
-                        outgoing.send(Frame.Text("YOU SAID: $text"))
-                        if (text.equals("bye", ignoreCase = true)) {
-                            close(CloseReason(CloseReason.Codes.NORMAL, "Client said BYE"))
-                        }
-                    }
-                }
+        val loginService by inject<LoginService>()
+        val connectionManager by inject<ClientConnectionManager>()
+
+        webSocket("/socket") {
+            val token = call.parameters["token"]
+            val group = call.parameters["groupId"]
+
+            if (token.isNullOrEmpty() || group.isNullOrEmpty()) {
+                return@webSocket call.respond(HttpStatusCode.Forbidden)
             }
+            val user = loginService.verifyUser(token)
+            if (user == null || !loginService.isUserInGroup(user, group)) {
+                return@webSocket call.respond(HttpStatusCode.Forbidden)
+            }
+
+            connectionManager.addClient(group, this)
         }
     }
+
 }
+
+

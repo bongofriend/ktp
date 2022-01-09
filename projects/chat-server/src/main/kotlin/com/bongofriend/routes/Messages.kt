@@ -14,7 +14,7 @@ import org.koin.ktor.ext.inject
 internal fun Route.messages() {
     val chatGroupService by inject<ChatGroupService>()
 
-    route("messages") {
+    route("/messages") {
         get("{groupId}") {
             val user = call.principal<User>() ?: return@get call.respond(HttpStatusCode.Forbidden)
             val groupId = call.parameters["groupId"] ?: return@get call.respond(HttpStatusCode.NotFound)
@@ -27,7 +27,7 @@ internal fun Route.messages() {
             val groupId = call.parameters["groupId"] ?: return@post call.respond(HttpStatusCode.NotFound)
             val request = call.receive<AddMessageToGroupRequest>()
             val msg = chatGroupService.addMessage(user, groupId, request) ?: return@post call.respond(HttpStatusCode.BadRequest)
-            return@post call.respond(HttpStatusCode.Created, mapOf("message" to msg))
+            return@post call.respond(HttpStatusCode.Created, msg)
         }
     }
 }

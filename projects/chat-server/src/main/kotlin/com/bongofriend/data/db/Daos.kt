@@ -24,6 +24,6 @@ class ChatMessageEntity(id: EntityID<UUID>): UUIDEntity(id) {
     companion object: UUIDEntityClass<ChatMessageEntity>(ChatMessages)
 
     var message by ChatMessages.message
-    var user by UserEntity referencedOn Users.id
-    var group by ChatGroupEntity referencedOn ChatGroups.id
+    var user by UserEntity referencedOn ChatMessages.user
+    var group by ChatGroupEntity referencedOn ChatMessages.group
 }

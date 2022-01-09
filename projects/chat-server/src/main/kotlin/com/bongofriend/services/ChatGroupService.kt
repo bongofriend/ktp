@@ -20,8 +20,9 @@ interface ChatGroupService {
     suspend fun addMessage(user: User, groupId: String, request: AddMessageToGroupRequest): ChatMessage?
 }
 
-class ChatGroupServiceImpl(private val chatGroupRepo: ChatGroupRepository, private val messageRepo: ChatMessageRepository, private val loginService: LoginService): ChatGroupService, BaseService(Logger.getLogger(ChatGroupService::class.simpleName)) {
+class ChatGroupServiceImpl(private val chatGroupRepo: ChatGroupRepository, private val messageRepo: ChatMessageRepository, private val loginService: LoginService, private val connectionManager: ClientConnectionManager): ChatGroupService, BaseService(Logger.getLogger(ChatGroupService::class.simpleName)) {
     override suspend fun createNewChatGroup(user: User, request: CreateChatGroupRequest): ChatGroup? {
+        logger.info("Creating Chat Group ${request.name}")
         if (request.name.isEmpty()) {
             return null
         }
@@ -31,6 +32,7 @@ class ChatGroupServiceImpl(private val chatGroupRepo: ChatGroupRepository, priva
     }
 
     override suspend fun addUserToChatGroup(userToAdd: User, request: AddToChatGroupRequest): Boolean {
+        logger.info("Adding User ${userToAdd.username} to ChatGroup with Id ${request.groupId}")
         if (request.groupId.isEmpty()) {
             return false
         }
@@ -50,8 +52,13 @@ class ChatGroupServiceImpl(private val chatGroupRepo: ChatGroupRepository, priva
     }
 
     override suspend fun addMessage(user: User, groupId: String, request: AddMessageToGroupRequest): ChatMessage? {
+        logger.info("Publishing Message to Chat Group $groupId")
         if(request.message.isEmpty() || !loginService.isUserInGroup(user, groupId)) return null
-        return messageRepo.addMessage(request.message, user, UUID.fromString(groupId))
+        val chatMessage = messageRepo.addMessage(request.message, user, UUID.fromString(groupId))
+        if (chatMessage != null) {
+            connectionManager.publishMessage(groupId, chatMessage)
+        }
+        return chatMessage
     }
 
 
