@@ -16,6 +16,7 @@ interface ChatGroupRepository {
     suspend fun createNewChatGroup(name: String): ChatGroup
     suspend fun addUserToChatGroup(user: User, group: ChatGroup): Boolean
     suspend fun getChatGroupById(id: UUID): ChatGroup?
+    suspend fun getChattGroupByName(name: String): ChatGroup?
     suspend fun getChatGroupsForUser(user: User): List<ChatGroup>
     suspend fun isUserInGroup(user: User, groupId: UUID): Boolean
 }
@@ -45,6 +46,13 @@ class ChatGroupRepositoryImpl: ChatGroupRepository {
     override suspend fun getChatGroupById(id: UUID): ChatGroup? = withContext(Dispatchers.IO) {
         val entity = transaction {
             ChatGroupEntity.find { ChatGroups.id eq id }.firstOrNull()
+        } ?: return@withContext null
+        return@withContext ChatGroup(entity.id.value, entity.name)
+    }
+
+    override suspend fun getChattGroupByName(name: String): ChatGroup? =  withContext(Dispatchers.IO) {
+        val entity = transaction {
+            ChatGroupEntity.find { ChatGroups.name eq name }.firstOrNull()
         } ?: return@withContext null
         return@withContext ChatGroup(entity.id.value, entity.name)
     }

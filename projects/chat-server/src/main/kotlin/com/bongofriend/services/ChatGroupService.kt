@@ -33,10 +33,12 @@ class ChatGroupServiceImpl(private val chatGroupRepo: ChatGroupRepository, priva
 
     override suspend fun addUserToChatGroup(userToAdd: User, request: AddToChatGroupRequest): Boolean {
         logger.info("Adding User ${userToAdd.username} to ChatGroup with Id ${request.groupId}")
-        if (request.groupId.isEmpty()) {
-            return false
+        val group = when {
+            !request.groupId.isNullOrEmpty() -> chatGroupRepo.getChatGroupById(UUID.fromString(request.groupId))
+            !request.name.isNullOrEmpty() -> chatGroupRepo.getChattGroupByName(request.name)
+            else -> null
         }
-        val group = chatGroupRepo.getChatGroupById(UUID.fromString(request.groupId)) ?: return false
+        group ?: return false
         return chatGroupRepo.addUserToChatGroup(userToAdd, group)
     }
 
