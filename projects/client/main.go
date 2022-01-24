@@ -6,7 +6,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"io"
 	"log"
 	"net/http"
@@ -14,12 +13,15 @@ import (
 	"os/signal"
 	"strings"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 var (
-	username *string
-	password *string
-	token    string
+	username   *string
+	password   *string
+	token      string
+	isRegister *string
 )
 
 const (
@@ -224,15 +226,16 @@ func ShowCurrentMessages(groupname string) {
 func main() {
 	var e error
 
-	username = flag.String("username", "test", "Username for login")
-	password = flag.String("password", "password", "Password for login")
-	group := flag.String("group", "testgroup", "Chat Group Name")
+	username = flag.String("username", "", "Username for login")
+	password = flag.String("password", "", "Password for login")
+	group := flag.String("group", "", "Chat Group Name")
 	message := flag.String("message", "", "Message to be send")
 	flag.Parse()
 
 	if len(*username) == 0 || len(*password) == 0 {
 		fmt.Println("username or password missing")
 	}
+
 	e = Login()
 	if e != nil {
 		fmt.Println(e)
