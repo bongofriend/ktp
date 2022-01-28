@@ -6,11 +6,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
+import kotlinx.coroutines.selects.select
 import org.junit.jupiter.api.*
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertSame
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+import kotlin.test.*
 
 @Suppress("NON_EXHAUSTIVE_WHEN_STATEMENT")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -68,7 +67,7 @@ class MessageTest {
                 val messages = objectMapper.readValue<Map<String, List<ChatMessage>>>(response.content!!)["messages"]
                 assertNotNull(messages)
                 assertFalse(messages.isEmpty())
-                assertTrue(messages.any{ g -> g.message == TEST_MESSAGE })
+                assertTrue(messages.any { g -> g.message == TEST_MESSAGE })
             }
         }
     }
@@ -77,21 +76,21 @@ class MessageTest {
     @Test
     fun `Receive messages from socket`() {
         withChatServerEnvironment {
-            val testMessage = "I bims"
             val token = getPrimaryUserToken()
             val chatGroup = getChatGroups(token).first()
             handleWebSocketConversation("/socket?token=${token}&groupId=${chatGroup.id}") { incoming, outcoming ->
-               for (f in incoming) {
-                   when (f) {
-                       is Frame.Text -> {
-                           val chatMessage = objectMapper.readValue<ChatMessage>(f.readBytes())
-                           assertSame(testMessage, chatMessage.message)
-                       }
-                   }
-               }
+                sendMessage(TEST_MESSAGE, chatGroup.id.toString(), token)
+                select<Unit> {
+                    incoming.onReceive { f ->
+                        when (f) {
+                            is Frame.Text -> {
+                                val chatMessage = objectMapper.readValue<ChatMessage>(f.readBytes())
+                                assertEquals(TEST_MESSAGE, chatMessage.message)
+                            }
+                        }
+                    }
+                }
             }
-            sendMessage(testMessage, chatGroup.id.toString(), token)
-
         }
     }
 }

@@ -3,6 +3,8 @@ package com.bongofriend.data.repositories
 import com.bongofriend.data.db.UserEntity
 import com.bongofriend.data.db.Users
 import com.bongofriend.data.models.User
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -15,25 +17,25 @@ interface UserRepository {
 }
 
 class UserRepositoryImpl: UserRepository {
-    override suspend fun addNewUser(username: String, password: String): User {
+    override suspend fun addNewUser(username: String, password: String): User  = withContext(Dispatchers.IO){
         val entity = transaction {
             UserEntity.new {
                 this.username = username
                 this.passwordHash = password
             }
         }
-        return User(entity.id.value, entity.username, entity.passwordHash)
+        return@withContext User(entity.id.value, entity.username, entity.passwordHash)
     }
 
     override suspend fun getUserByName(username: String): User? = getUserByExpression(Users.username eq username)
 
     override suspend fun getUserById(userId: UUID): User? = getUserByExpression(Users.id eq userId)
 
-    private fun getUserByExpression(op: Op<Boolean>): User? {
+    private suspend fun getUserByExpression(op: Op<Boolean>): User? = withContext(Dispatchers.IO) {
         val userEntity = transaction {
             return@transaction UserEntity.find(op).firstOrNull()
-        } ?: return null
-        return User(userEntity.id.value, userEntity.username, userEntity.passwordHash)
+        } ?: return@withContext null
+        return@withContext User(userEntity.id.value, userEntity.username, userEntity.passwordHash)
     }
 
 }
