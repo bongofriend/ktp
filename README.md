@@ -38,6 +38,6 @@ The client supports the following commands:
 
 <code>./client -username *username* -password *passsword* -group *name of group* -message="*chat message*"</code>
 
-**Show current messages in group and listen to new ones**
+**Show current messages in group and listen to new messages**
 
-<code>./client -add -username *username* -password *passsword* -group *name of group*</code>
+<code>./client -username *username* -password *passsword* -group *name of group*</code>
