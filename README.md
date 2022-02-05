@@ -11,7 +11,7 @@
 2. Navigate to `projects/client` of this repo
 3. Execute `go build client` to compile the binary
 
-### Support Commands
+### Supported Commands
 
 The client supports the following commands:
 
