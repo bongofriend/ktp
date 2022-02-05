@@ -6,3 +6,5 @@ projects/chat-server/*.lock
 projcets/chat-server/app/snippets-api
 projects/chat-server/*.code-workspace
 projects/chat-server/.idea
+projects/client/client
+projcets/client/go.sum

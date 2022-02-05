@@ -18,17 +18,19 @@ import (
 )
 
 var (
-	username   *string
-	password   *string
-	token      string
-	isRegister *string
+	username *string
+	password *string
+	token    string
 )
 
 const (
-	baseUrl           = "http://localhost:8080"
-	tokenEndpoint     = "/users/token"
-	chatGroupEndpoint = "/chatgroups"
-	messageEndpoint   = "/messages"
+	baseUrl                    = "http://localhost:8080"
+	loginEndpoint              = "/users"
+	tokenEndpoint              = "/users/token"
+	chatGroupEndpoint          = "/chatgroups"
+	messageEndpoint            = "/messages"
+	addToGroupEndpoint         = "/chatgroups/add"
+	createNewChatGroupEndpoint = "/chatgroups/create"
 )
 
 type ChatGroup struct {
@@ -65,7 +67,16 @@ func Request(endpoint string, method string, data interface{}) ([]byte, error) {
 	if len(token) > 0 {
 		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	}
-	rsp, _ := client.Do(request)
+	rsp, e := client.Do(request)
+
+	if e != nil {
+		return nil, e
+	}
+
+	if rsp.StatusCode > 226 {
+		return nil, errors.New("Http Error" + string(rune(rsp.StatusCode)))
+	}
+
 	if rsp.Body != nil {
 		defer rsp.Body.Close()
 	}
@@ -198,6 +209,7 @@ func StartGroupConnection(groupname string) {
 		return
 	}
 	go handler(connection)
+
 	for {
 		select {
 		case <-time.After(time.Duration(1) * time.Millisecond * 1000):
@@ -215,46 +227,127 @@ func PrintChatMessage(msg ChatGroupMessage) {
 	fmt.Printf("%s: %s\n", msg.Username, msg.Message)
 }
 
-func ShowCurrentMessages(groupname string) {
-	g, _ := GetGroupId(groupname)
-	msgs, _ := GetChatMessage(*g)
+func ShowCurrentMessages(groupname string) error {
+	g, e := GetGroupId(groupname)
+	if e != nil {
+		return e
+	}
+	msgs, err := GetChatMessage(*g)
+	if err != nil {
+		return err
+	}
 	for _, m := range msgs {
 		PrintChatMessage(m)
 	}
+	return nil
+}
+
+func Register() error {
+	data := map[string]string{"username": *username, "password": *password}
+	_, e := Request(loginEndpoint, "POST", data)
+	return e
+}
+
+func AddUserToGroup(groupName string) error {
+	data := map[string]string{"name": groupName}
+	_, e := Request(addToGroupEndpoint, "POST", data)
+	return e
+}
+
+func CreateNewGroup(groupName string) error {
+	data := map[string]string{"name": groupName}
+	_, e := Request(createNewChatGroupEndpoint, "POST", data)
+	return e
 }
 
 func main() {
 	var e error
+	var isRegister bool
+	var showGroups bool
+	var addToGroup bool
+	var createNewGroup bool
 
 	username = flag.String("username", "", "Username for login")
 	password = flag.String("password", "", "Password for login")
 	group := flag.String("group", "", "Chat Group Name")
 	message := flag.String("message", "", "Message to be send")
+	flag.BoolVar(&isRegister, "register", false, "Should Register")
+	flag.BoolVar(&showGroups, "groups", false, "Display Groups")
+	flag.BoolVar(&addToGroup, "add", false, "Add user to group")
+	flag.BoolVar(&createNewGroup, "create", false, "Create new group")
 	flag.Parse()
 
 	if len(*username) == 0 || len(*password) == 0 {
 		fmt.Println("username or password missing")
+		return
+	}
+
+	if isRegister {
+		e = Register()
+		if e != nil {
+			fmt.Println("Could not create user")
+		} else {
+			fmt.Println("User created")
+		}
+		return
 	}
 
 	e = Login()
 	if e != nil {
-		fmt.Println(e)
+		fmt.Println("Could not login")
+		return
 	}
 
-	if len(*group) == 0 && len(*message) == 0 {
+	if !addToGroup && !createNewGroup && showGroups {
 		e = DisplayGroups()
 		if e != nil {
-			fmt.Println(e)
+			fmt.Println("Could not display groups")
 		}
+		return
 	}
+
+	if !createNewGroup && !showGroups && addToGroup {
+		if len(*group) == 0 {
+			fmt.Println("Group required")
+			return
+		}
+		e = AddUserToGroup(*group)
+		if e != nil {
+			fmt.Println("Could not add user to group")
+		} else {
+			fmt.Println("User added to group")
+		}
+		return
+	}
+
+	if !addToGroup && !showGroups && createNewGroup {
+		if len(*group) == 0 {
+			fmt.Println("Group required")
+			return
+		}
+		e = CreateNewGroup(*group)
+		if e != nil {
+			fmt.Println("Could not create group")
+		} else {
+			fmt.Println("Group created and user added")
+		}
+		return
+	}
+
 	if len(*group) > 0 && len(*message) > 0 {
 		e = SendMessage(*group, *message)
 		if e != nil {
-			fmt.Println(e)
+			fmt.Println("Could not send message")
 		}
+		return
 	}
+
 	if len(*group) > 0 && len(*message) == 0 {
-		ShowCurrentMessages(*group)
+		e := ShowCurrentMessages(*group)
+		if e != nil {
+			fmt.Println("Could not access groups because not part of group or group not existing")
+			return
+		}
 		StartGroupConnection(*group)
 	}
 
